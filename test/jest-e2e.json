@@ -1,0 +1,43 @@
+{
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "@app/core/(.*)": "<rootDir>/../libs/core/src/$1",
+    "@app/core": "<rootDir>/../libs/core/src",
+    "@app/config/(.*)": "<rootDir>/../libs/config/src/$1",
+    "@app/config": "<rootDir>/../libs/config/src",
+    "@app/core/config/(.*)": "<rootDir>/../libs/core/config/src/$1",
+    "@app/core/config": "<rootDir>/../libs/core/config/src",
+    "@app/database/(.*)": "<rootDir>/../libs/database/src/$1",
+    "@app/database": "<rootDir>/../libs/database/src",
+    "@app/error/(.*)": "<rootDir>/../libs/error/src/$1",
+    "@app/error": "<rootDir>/../libs/error/src",
+    "@app/error/filter/(.*)": "<rootDir>/../libs/error/filter/src/$1",
+    "@app/error/filter": "<rootDir>/../libs/error/filter/src",
+    "@app/error/types/(.*)": "<rootDir>/../libs/error/types/src/$1",
+    "@app/error/types": "<rootDir>/../libs/error/types/src",
+    "@app/error/utils/(.*)": "<rootDir>/../libs/error/utils/src/$1",
+    "@app/error/utils": "<rootDir>/../libs/error/utils/src",
+    "@app/response/(.*)": "<rootDir>/../libs/response/src/$1",
+    "@app/response": "<rootDir>/../libs/response/src",
+    "@app/decorators/(.*)": "<rootDir>/../libs/decorators/src/$1",
+    "@app/decorators": "<rootDir>/../libs/decorators/src",
+    "@app/types/(.*)": "<rootDir>/../libs/types/src/$1",
+    "@app/types": "<rootDir>/../libs/types/src",
+    "@app/storage/(.*)": "<rootDir>/../libs/storage/src/$1",
+    "@app/storage": "<rootDir>/../libs/storage/src",
+    "@app/pipe/(.*)": "<rootDir>/../libs/pipe/src/$1",
+    "@app/pipe": "<rootDir>/../libs/pipe/src",
+    "@app/utils/(.*)": "<rootDir>/../libs/utils/src/$1",
+    "@app/utils": "<rootDir>/../libs/utils/src"
+  }
+}

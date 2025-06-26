@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DB_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Action {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum ContentEntityType {
+  NEWS
+  GAMES_NEWS
+  PROMOTION_BANNER
+  HERO
+}
+
+// 사용자 정보
+model User {
+  id          String     @id @default(cuid())
+  role        Role       @default(USER)
+  name        String
+  email       String     @unique
+  password    String
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  token       String?    @db.Text
+
+  contents            Content[]
+  promotionBanners    PromotionBanner[]
+  audits              Audit[]
+  hero                Hero[]
+
+  @@map("users")
+}
+
+// 콘텐츠 추상화(Single Table Inheritance)
+model Content {
+  id           Int                @id @default(autoincrement())
+  type         ContentEntityType
+  title        String?
+  content      String?            @db.Text
+  authorId     String             @map("author_id")
+  author       User               @relation(fields: [authorId], references: [id])
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  publishedAt  DateTime?          @map("published_at")
+  releaseDate  DateTime?          @map("release_date")
+  hashtags     HashtagOnContent[]
+
+  order        Int?               // 순서 필드 (null 허용)
+  platformLinks PlatformLink[]
+
+  @@map("contents")
+  @@index([type, order])
+}
+
+model PlatformLink {
+  id        Int      @id @default(autoincrement())
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId Int
+
+  platform  String   // 예: "Steam", "PlayStation", "Xbox" 등
+  link      String   // 플랫폼별 링크
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_links")
+  @@index([contentId])
+}
+
+// 콘텐츠와 해시태그의 다대다 관계(조인테이블 방식)
+model HashtagOnContent {
+  id         Int      @id @default(autoincrement())
+  contentId  Int
+  hashtagId  Int
+
+  content    Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  hashtag    Hashtag  @relation(fields: [hashtagId], references: [id])
+
+  @@unique([contentId, hashtagId])
+  @@map("hashtag_on_content")
+}
+
+// 해시태그
+model Hashtag {
+  id         Int                  @id @default(autoincrement())
+  tag        String               @unique
+  contents   HashtagOnContent[]
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  @@map("hashtags")
+}
+
+// 프로모션 배너
+model PromotionBanner {
+  id           Int      @id @default(autoincrement())
+  title        String?
+  content      String?
+  isDraft      Boolean  @default(true)
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  authorId     String
+  author       User     @relation(fields: [authorId], references: [id])
+  order        Int?     // 순서 필드 (null 허용)
+
+  @@map("promotion_banners")
+  @@index([order])
+  // Partial unique index를 직접 DB에서 생성해야 함
+  // @@unique([authorId, isDraft], name: "authorId_isDraft_unique") // <- 삭제!
+}
+
+// 파일의 다형성 관계 (Content, PromotionBanner 등 다양한 엔터티에 연결)
+model File {
+  id           Int                @id @default(autoincrement())
+  type         String             // e.g., image, video, gif
+  size         Int
+  name         String
+  url          String
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+  targetType   ContentEntityType?
+  targetId     Int?
+
+  @@map("files")
+  @@index([targetType, targetId])
+}
+
+
+// 단일화된 Audit(감사) 테이블, 다형성(Polymorphic) 관계 - FK 없이 설계
+model Audit {
+  id             Int                @id @default(autoincrement())
+  action         Action             @default(CREATE)
+  status         Status             @default(PENDING)
+  data           Json?
+  authorId       String
+  createdAt      DateTime           @default(now()) @map("created_at")
+  completedAt    DateTime?          @map("completed_at")
+  targetType     ContentEntityType
+  targetId       Int
+
+  author         User               @relation(fields: [authorId], references: [id])
+
+  @@map("audits")
+  @@index([targetType, targetId])
+}
+
+model Hero {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  content     String?
+  isDraft     Boolean  @default(true)
+  isActive    Boolean  @default(false)
+  order       Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+
+  @@map("heroes")  
+  @@index([order])
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  email     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@map("contacts") 
+}
+
+// 회사 정보
+model Company {
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  postalCode     String?  @map("postal_code")
+  address        String?  @db.VarChar(255)
+  addressDetail  String?  @map("address_detail") @db.VarChar(255)
+  phone          String?  @db.VarChar(20)
+  email          String?  @db.VarChar(100)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+   @@map("company")
+}

@@ -4,6 +4,7 @@ import { UploadfileController } from './uploadfile.controller';
 import { StorageAdapter } from '@app/storage';
 import { ConfigService } from '@nestjs/config';
 import { LocalStorage } from '@app/storage/local-storage';
+import { S3Storage } from '@app/storage/s3-storage';
 
 const StorageProvider: Provider = {
   provide: StorageAdapter,
@@ -12,8 +13,9 @@ const StorageProvider: Provider = {
       case 'local':
         return new LocalStorage(config);
       case 'dev':
+        return new S3Storage(config);
       case 'prod':
-        return new LocalStorage(config);
+        return new S3Storage(config);
       default:
         throw new Error('Invalid Environment');
     }

@@ -2,8 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { StorageAdapter } from './storage.adapter';
 import { StorageFile } from '@app/types';
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
+import { StorageConfig } from '@app/core';
 
 @Injectable()
 export class S3Storage extends StorageAdapter {
@@ -13,21 +19,32 @@ export class S3Storage extends StorageAdapter {
   private readonly region: string;
   private readonly cloudfrontDomain: string;
 
-  constructor(private readonly config: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     super();
-    this.region = this.config.get<string>('AWS_REGION', 'ap-northeast-2');
-    this.bucket = this.config.get<string>('AWS_S3_BUCKET', '');
-    this.cloudfrontDomain = this.config.get<string>('CLOUDFRONT_DOMAIN', '');
+    const storageConfig = configService.getOrThrow<StorageConfig>('storage');
+    this.region = storageConfig.region;
+    this.bucket = storageConfig.bucket;
+    this.cloudfrontDomain = storageConfig.cloudfrontDomain;
     if (!this.cloudfrontDomain) {
-      throw new Error('CLOUDFRONT_DOMAIN 환경변수가 필요합니다.');
+      throw new Error(
+        'CLOUDFRONT_DOMAIN 또는 RESOURCE_DOMAIN 환경변수가 필요합니다.',
+      );
+    }
+    if (!storageConfig.accessKeyId || !storageConfig.secretAccessKey) {
+      throw new Error(
+        'AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY 환경변수가 필요합니다.',
+      );
     }
     this.s3 = new S3Client({
       region: this.region,
       credentials: {
-        accessKeyId: this.config.get<string>('AWS_ACCESS_KEY_ID', ''),
-        secretAccessKey: this.config.get<string>('AWS_SECRET_ACCESS_KEY', ''),
+        accessKeyId: storageConfig.accessKeyId,
+        secretAccessKey: storageConfig.secretAccessKey,
       },
     });
+    this.logger.log(
+      `S3Storage initialized - region: ${this.region}, bucket: ${this.bucket}, cloudfrontDomain: ${this.cloudfrontDomain}`,
+    );
   }
 
   async upload(
@@ -45,11 +62,9 @@ export class S3Storage extends StorageAdapter {
           Body: buffer,
         }),
       );
-      this.logger.log(
-        `File uploaded to S3 successfully. S3 key: ${s3Key}`,
-      );
+      this.logger.log(`File uploaded to S3 successfully. S3 key: ${s3Key}`);
 
-      // CloudFront URL만 반환
+      // CloudFront or Resource Domain URL 반환
       return `${this.cloudfrontDomain.replace(/\/$/, '')}/${s3Key}`;
     } catch (error) {
       this.logger.error('Failed to upload file to S3', error);

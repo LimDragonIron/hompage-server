@@ -1,12 +1,12 @@
-import { ConfigService } from '@nestjs/config';
 import {
   Injectable,
   Logger,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
-import { DatabaseConfig } from '@app/core';
+import type { DatabaseConfig } from '@app/core';
 
 @Injectable()
 export class DatabaseService
@@ -16,18 +16,16 @@ export class DatabaseService
   private readonly logger = new Logger(DatabaseService.name);
 
   constructor(private readonly configService: ConfigService) {
-    const databaseUrl =
-      configService.getOrThrow<DatabaseConfig>('database').url;
+    const dbConfig = configService.getOrThrow<DatabaseConfig>('database');
     super({
       log: ['query', 'info', 'warn', 'error'],
       datasources: {
         db: {
-          url: databaseUrl,
+          url: dbConfig.url,
         },
       },
     });
-    const maskedUrl = databaseUrl.replace(/:\/\/[^@]+@/, '://***:***@');
-
+    const maskedUrl = dbConfig.url.replace(/:\/\/[^@]+@/, '://***:***@');
     this.logger.log('DatabaseService initialized');
     this.logger.log(`Database URL: ${maskedUrl}`);
 

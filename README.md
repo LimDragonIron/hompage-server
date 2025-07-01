@@ -130,9 +130,44 @@ http://localhost:<PORT>/docs
 - `JWT_SECRET`: JWT 토큰 비밀 키
 - `REFRESH_TOKEN_SECRET`: 리프레시 토큰 비밀 키
 
+아래는 사용 가능한 전체 환경 변수 목록 예시입니다.
+
+```
+# PORT 및 오리진
+APP_PORT=
+ORIGINS=
+
+# JWT 관련
+JWT_SECRET=
+JWT_EXPIRES_IN=
+REFRESH_TOKEN_SECRET=
+REFRESH_TOKEN_EXPIRES_IN=
+
+# 데이터베이스 설정
+DB_HOST=
+DB_PORT=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+DB_URL=
+
+# 로깅
+LOG_LEVEL=
+
+# 스토리지 (AWS S3)
+AWS_REGION=
+AWS_S3_BUCKET=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+# CloudFront
+CLOUDFRONT_DOMAIN=
+```
+
+각 변수는 서비스 환경에 맞게 값을 설정해 주세요.
+
 ---
 
 ## 라이센스
 
 이 프로젝트는 [MIT 라이센스](https://opensource.org/licenses/MIT)를 따릅니다.
-```

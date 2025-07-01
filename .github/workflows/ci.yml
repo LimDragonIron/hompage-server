@@ -19,7 +19,7 @@ jobs:
           key: ${{ secrets.REMOTE_PRIVATE_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
-            cd /home/ubuntu/Server-V2
+            cd /home/ubuntu/hompage-server
             git pull origin main
             npm install --force
             npm run build

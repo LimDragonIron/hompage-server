@@ -27,11 +27,6 @@ export class UploadfileService {
 
   /**
    * 실제 파일 업로드 처리 및 파일 정보 DB 저장
-   * @param uploadFile 업로드된 파일 객체 (Multer)
-   * @param uploadDto 업로드 파일 DTO (contentType, contentId)
-   * @returns 업로드된 파일 정보 ({ id, name, type, url, size })
-   * @throws BadRequestException contentType/contentId 누락, 존재하지 않는 엔티티, 유효하지 않은 타입 등
-   * @throws InternalServerErrorException 업로드 실패
    */
   async fileUpload(uploadFile: Express.Multer.File, uploadDto: UploadFileDto) {
     let uploadFilePath: string | null = null;
@@ -93,11 +88,10 @@ export class UploadfileService {
         },
       });
 
-      // 환경에 따라 urlForDb 결정
+      // prod 환경이 아니면 localhost URL 사용, prod면 storage 리턴 URL 사용
+      const nodeEnv = (this.configService.get('NODE_ENV') || '').toLowerCase();
       let urlForDb = uploadFilePath;
-      const nodeEnv = this.configService.get('NODE_ENV');
-      const port = this.configService.get('APP_PORT') || 8000;
-      if (nodeEnv !== 'production' && uploadFilePath) {
+      if (nodeEnv !== 'prod' && uploadFilePath) {
         let relativeUrl: string;
         if (uploadFilePath.startsWith('/uploads/')) {
           relativeUrl = uploadFilePath;
@@ -106,6 +100,7 @@ export class UploadfileService {
         } else {
           relativeUrl = '/uploads/' + uploadFilePath.replace(/^\/+/, '');
         }
+        const port = this.configService.get('APP_PORT') || 8000;
         urlForDb = `http://localhost:${port}${relativeUrl}`;
       }
 
